@@ -96,6 +96,10 @@ namespace CyberBotWPF
                 "🎭 Social engineering attacks manipulate people rather than systems. Always verify the identity of anyone requesting sensitive information — even if they claim to be IT support.",
                 "🎭 Pretexting, baiting, and tailgating are all forms of social engineering. Awareness is your best defence.",
             },
+            ["encryption"] = new List<string>
+            {
+             "🔑 Encryption scrambles your data so only authorised parties can read it. Always use encrypted connections (look for HTTPS).",
+},
         };
 
         // ── Sentiment keyword maps ──
