@@ -166,6 +166,7 @@ namespace CyberBotWPF
             "That's outside my current knowledge base. Try asking me about phishing, ransomware, passwords, or online privacy.",
             "Hmm, I didn't quite catch that. I'm best at cybersecurity topics — feel free to ask about things like scams, firewalls, or two-factor authentication.",
             "Remember, staying safe online starts with awareness. Ask me about passwords, phishing, or scams!"
+            "Stay cyber smart! Try asking me about firewalls, ransomware, or safe browsing habits.",
         };
 
         // ──────────────────────────────────────────
