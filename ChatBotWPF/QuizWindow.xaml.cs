@@ -53,7 +53,7 @@ namespace CyberBotWPF
                 new QuizQuestion
                 {
                     Question = "Which of the following is the strongest password?",
-                    Options = new List<string> { "A)  password1234", "B)  MyDogSpot", "C)  Tr0ub4dor&3!", "D)  123456" },
+                    Options = new List<string> { "A)  password1234", "B)  MyDogSpots", "C)  Tr0ub4dor&3!", "D)  123456" },
                     CorrectIndex = 2,
                     Explanation = "A strong password mixes uppercase, lowercase, numbers and symbols. Avoid dictionary words and predictable patterns.",
                     Type = "MULTIPLE CHOICE"
