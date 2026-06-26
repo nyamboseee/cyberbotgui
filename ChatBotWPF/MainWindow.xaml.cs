@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,6 +14,7 @@ namespace CyberBotWPF
     {
         private readonly ChatEngine _engine = new();
         private bool _isTyping = false;
+        private readonly List<string> _activityLog = new();
 
         public MainWindow()
         {
@@ -23,6 +25,7 @@ namespace CyberBotWPF
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             AppendBotMessage(_engine.GetWelcomeMessage());
+            LogActivity("Session started.");
         }
 
         // ── Send on Enter ──
@@ -43,7 +46,8 @@ namespace CyberBotWPF
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
             ChatPanel.Children.Clear();
-            AppendBotMessage("Chat cleared! Ask me anything about cybersecurity. 🔐");
+            AppendBotMessage("Chat cleared! Ask me anything about cybersecurity.");
+            LogActivity("Chat cleared by user.");
         }
 
         // ── Quick topic buttons from sidebar ──
@@ -56,7 +60,40 @@ namespace CyberBotWPF
             }
         }
 
-        // ── Input text changed — could be used for live hints ──
+        // ── Open Task Manager ──
+        private void OpenTaskManager_Click(object sender, RoutedEventArgs e)
+        {
+            LogActivity("Task Manager opened.");
+            var taskWin = new TaskWindow();
+            taskWin.Closed += (s, args) =>
+            {
+                if (!string.IsNullOrEmpty(taskWin.LastTaskTitle))
+                    LogActivity($"Task added: '{taskWin.LastTaskTitle}'.");
+            };
+            taskWin.ShowDialog();
+        }
+
+        // ── Open Quiz ──
+        private void OpenQuiz_Click(object sender, RoutedEventArgs e)
+        {
+            LogActivity("Quiz started.");
+            var quiz = new QuizWindow();
+            quiz.Closed += (s, args) =>
+            {
+                LogActivity($"Quiz completed. Score: {quiz.FinalScore} / {quiz.TotalQuestions}.");
+                AppendBotMessage($"Welcome back! You scored {quiz.FinalScore} out of {quiz.TotalQuestions} on the quiz. " +
+                                 $"Ask me anything to keep learning.");
+            };
+            quiz.ShowDialog();
+        }
+
+        // ── Show Activity Log ──
+        private void ShowActivityLog_Click(object sender, RoutedEventArgs e)
+        {
+            ShowActivityLogInChat();
+        }
+
+        // ── Input text changed ──
         private void InputBox_TextChanged(object sender, TextChangedEventArgs e) { }
 
         // ──────────────────────────────────────────
@@ -71,6 +108,25 @@ namespace CyberBotWPF
 
             InputBox.Clear();
 
+            // Check for task manager command (NLP)
+            if (IsTaskManagerRequest(text))
+            {
+                AppendUserMessage(text);
+                LogActivity("Task Manager opened via chat command.");
+                var taskWin = new TaskWindow();
+                taskWin.ShowDialog();
+                AppendBotMessage("Task Manager closed. Your tasks have been updated.");
+                return;
+            }
+
+            // Check for activity log command (NLP)
+            if (IsActivityLogRequest(text))
+            {
+                AppendUserMessage(text);
+                ShowActivityLogInChat();
+                return;
+            }
+
             // Show user bubble
             AppendUserMessage(text);
 
@@ -78,12 +134,15 @@ namespace CyberBotWPF
             var typingBubble = AppendTypingIndicator();
             _isTyping = true;
 
-            // Simulate realistic typing delay (100–250ms per 10 chars, min 600ms)
+            // Simulate typing delay
             int delay = Math.Max(600, Math.Min(2000, text.Length * 20));
             await Task.Delay(delay);
 
             // Get response
             string response = _engine.ProcessMessage(text);
+
+            // Log NLP action
+            LogActivity($"User asked about: \"{TruncateForLog(text)}\".");
 
             // Remove typing indicator
             ChatPanel.Children.Remove(typingBubble);
@@ -92,13 +151,74 @@ namespace CyberBotWPF
             // Show bot response
             AppendBotMessage(response);
 
-            // Update sidebar memory & sentiment
+            // Update sidebar
             UpdateMemoryPanel();
             UpdateSentimentPanel();
 
             // Scroll to bottom
             ChatScroller.ScrollToBottom();
         }
+
+        // ──────────────────────────────────────────
+        //  NLP: detect activity log request
+        // ──────────────────────────────────────────
+        private bool IsTaskManagerRequest(string input)
+        {
+            input = input.ToLower();
+            string[] triggers = {
+                "add task", "my tasks", "show tasks", "view tasks", "task manager",
+                "open tasks", "manage tasks", "set reminder", "add a task",
+                "create task", "new task", "task list"
+            };
+            foreach (var t in triggers)
+                if (input.Contains(t)) return true;
+            return false;
+        }
+
+        private bool IsActivityLogRequest(string input)
+        {
+            input = input.ToLower();
+            string[] triggers = {
+                "show activity log", "activity log", "what have you done",
+                "show log", "view log", "recent actions", "what have you done for me",
+                "show me what you did", "history"
+            };
+            foreach (var t in triggers)
+                if (input.Contains(t)) return true;
+            return false;
+        }
+
+        // ──────────────────────────────────────────
+        //  Activity log
+        // ──────────────────────────────────────────
+        private void LogActivity(string description)
+        {
+            string entry = $"[{DateTime.Now:HH:mm:ss}]  {description}";
+            _activityLog.Add(entry);
+        }
+
+        private void ShowActivityLogInChat()
+        {
+            if (_activityLog.Count == 0)
+            {
+                AppendBotMessage("No activity recorded yet. Start chatting or take the quiz!");
+                return;
+            }
+
+            // Show last 5–10 entries
+            int start = Math.Max(0, _activityLog.Count - 10);
+            var recent = _activityLog.GetRange(start, _activityLog.Count - start);
+
+            string log = "Here is a summary of recent actions:\n\n";
+            for (int i = 0; i < recent.Count; i++)
+                log += $"{i + 1}. {recent[i]}\n";
+
+            AppendBotMessage(log.TrimEnd());
+            LogActivity("Activity log viewed.");
+        }
+
+        private string TruncateForLog(string text)
+            => text.Length > 40 ? text.Substring(0, 40) + "..." : text;
 
         // ──────────────────────────────────────────
         //  Message bubble builders
@@ -115,7 +235,6 @@ namespace CyberBotWPF
                 CornerRadius = new CornerRadius(16, 4, 16, 16),
                 Padding = new Thickness(14, 10, 14, 10),
                 MaxWidth = 520,
-                Margin = new Thickness(0, 0, 0, 0),
                 Effect = new System.Windows.Media.Effects.DropShadowEffect
                 {
                     Color = Color.FromRgb(0, 180, 255),
@@ -149,10 +268,10 @@ namespace CyberBotWPF
             container.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             container.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-            // Avatar dot
             var avatar = new Border
             {
-                Width = 32, Height = 32,
+                Width = 32,
+                Height = 32,
                 Background = new SolidColorBrush(Color.FromRgb(0, 255, 159)),
                 CornerRadius = new CornerRadius(16),
                 Margin = new Thickness(0, 0, 10, 0),
@@ -165,15 +284,15 @@ namespace CyberBotWPF
                     Opacity = 0.4
                 }
             };
-            var avatarText = new TextBlock
+            avatar.Child = new TextBlock
             {
-                Text = "⬡",
-                FontSize = 14,
+                Text = "CB",
+                FontSize = 10,
+                FontWeight = FontWeights.Bold,
                 Foreground = new SolidColorBrush(Color.FromRgb(10, 14, 26)),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             };
-            avatar.Child = avatarText;
             Grid.SetColumn(avatar, 0);
 
             var bubble = new Border
@@ -215,7 +334,8 @@ namespace CyberBotWPF
 
             var avatar = new Border
             {
-                Width = 32, Height = 32,
+                Width = 32,
+                Height = 32,
                 Background = new SolidColorBrush(Color.FromRgb(0, 255, 159)),
                 CornerRadius = new CornerRadius(16),
                 Margin = new Thickness(0, 0, 10, 0),
@@ -223,7 +343,9 @@ namespace CyberBotWPF
             };
             avatar.Child = new TextBlock
             {
-                Text = "⬡", FontSize = 14,
+                Text = "CB",
+                FontSize = 10,
+                FontWeight = FontWeights.Bold,
                 Foreground = new SolidColorBrush(Color.FromRgb(10, 14, 26)),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
@@ -240,13 +362,13 @@ namespace CyberBotWPF
                 Width = 80
             };
 
-            // Three animated dots
             var dotsPanel = new StackPanel { Orientation = Orientation.Horizontal };
             for (int i = 0; i < 3; i++)
             {
                 var dot = new Ellipse
                 {
-                    Width = 7, Height = 7,
+                    Width = 7,
+                    Height = 7,
                     Fill = new SolidColorBrush(Color.FromRgb(0, 255, 159)),
                     Margin = new Thickness(i == 0 ? 0 : 5, 0, 0, 0)
                 };
@@ -293,14 +415,13 @@ namespace CyberBotWPF
         private void UpdateMemoryPanel()
         {
             var mem = _engine.Memory;
-            MemoryName.Text  = $"Name: {(string.IsNullOrEmpty(mem.Name) ? "—" : mem.Name)}";
+            MemoryName.Text = $"Name: {(string.IsNullOrEmpty(mem.Name) ? "—" : mem.Name)}";
             MemoryTopic.Text = $"Interest: {(string.IsNullOrEmpty(mem.FavouriteTopic) ? "—" : mem.FavouriteTopic)}";
             MemoryCount.Text = $"Messages: {mem.MessageCount}";
 
-            // Update header avatar / label
             if (!string.IsNullOrEmpty(mem.Name))
             {
-                UserLabel.Text  = mem.Name;
+                UserLabel.Text = mem.Name;
                 UserAvatar.Text = mem.Name[0].ToString().ToUpper();
             }
         }
@@ -314,15 +435,13 @@ namespace CyberBotWPF
 
             SentimentLabel.Text = label;
             SentimentEmoji.Text = emoji;
-            SentimentDesc.Text  = desc;
+            SentimentDesc.Text = desc;
 
-            // Parse hex color
             var color = (Color)ColorConverter.ConvertFromString(colorHex);
-            var brush  = new SolidColorBrush(color);
+            var brush = new SolidColorBrush(color);
 
             SentimentLabel.Foreground = brush;
 
-            // Animate bar width
             double targetWidth = ChatScroller.ActualWidth * barFraction * 0.6;
             var widthAnim = new DoubleAnimation(SentimentBar.Width, Math.Max(20, targetWidth),
                 TimeSpan.FromMilliseconds(400))
@@ -331,7 +450,7 @@ namespace CyberBotWPF
             };
             SentimentBar.BeginAnimation(WidthProperty, widthAnim);
             SentimentBar.Background = brush;
-            SentimentBarLabel.Text  = label.ToUpper();
+            SentimentBarLabel.Text = label.ToUpper();
             SentimentBarLabel.Foreground = brush;
         }
     }

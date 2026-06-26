@@ -305,9 +305,28 @@
                     <Button Content="🌐  VPN" Style="{StaticResource ClearBtn}"
                             Height="34" Margin="10,2,10,2"
                             Click="QuickTopic_Click" Tag="VPN benefits"/>
-                    <Button Content="💳  Scams" Style="{StaticResource ClearBtn}"
+                    <Button Content="  Scams" Style="{StaticResource ClearBtn}"
                             Height="34" Margin="10,2,10,2"
                             Click="QuickTopic_Click" Tag="online scams"/>
+
+                    <!-- Divider -->
+                    <Border Background="#1E3A5F" Height="1" Margin="10,12,10,12"/>
+
+                    <!-- Tools section -->
+                    <TextBlock Text="// TOOLS" FontFamily="Consolas" FontSize="10"
+                               Foreground="#5A6A8A" Margin="16,0,16,8" FontWeight="Bold"/>
+
+                    <Button Content="Task Manager" Style="{StaticResource ClearBtn}"
+                            Height="34" Margin="10,2,10,2"
+                            Click="OpenTaskManager_Click"/>
+
+                    <Button Content="Start Quiz" Style="{StaticResource ClearBtn}"
+                            Height="34" Margin="10,2,10,2"
+                            Click="OpenQuiz_Click"/>
+
+                    <Button Content="Activity Log" Style="{StaticResource ClearBtn}"
+                            Height="34" Margin="10,2,10,2"
+                            Click="ShowActivityLog_Click"/>
 
                 </StackPanel>
             </ScrollViewer>
