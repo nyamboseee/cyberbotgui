@@ -44,7 +44,7 @@ namespace CyberBotWPF
             {
                 new QuizQuestion
                 {
-                    Question = "What should you do if you receive an email asking for your password?",
+                    Question = "What should you do if you receive an email asking for your personal password?",
                     Options = new List<string> { "A)  Reply with your password", "B)  Delete the email", "C)  Report the email as phishing", "D)  Ignore it" },
                     CorrectIndex = 2,
                     Explanation = "Reporting phishing emails helps protect others. Legitimate organisations will never ask for your password via email.",
