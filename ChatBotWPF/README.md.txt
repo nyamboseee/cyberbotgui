@@ -77,3 +77,28 @@ feat: implement UserMemory for name and topic recall
 feat: add animated typing indicator and fade-in message bubbles
 feat: add sidebar quick-topic buttons and conversation flow handling
 ```
+## Part 3 / POE — Additional Features
+
+### Task 1: Task Assistant
+- Add cybersecurity tasks with title, description, and optional reminder
+- Choose a timeframe for reminders (tomorrow, 3 days, 1 week, etc.)
+- Mark tasks as completed or delete them
+- Tasks saved to SQLite database and persist between sessions
+- Trigger via sidebar button or by typing "add task" in chat
+
+### Task 2: Cybersecurity Quiz Mini-Game
+- 12 questions covering phishing, passwords, malware, VPNs, 2FA, and more
+- Mix of multiple choice and true/false formats
+- Questions randomised each time
+- Immediate feedback with explanations after each answer
+- Final score with performance feedback
+
+### Task 3: NLP Simulation
+- Detects multiple ways users phrase requests
+- "add task", "my tasks", "set reminder" opens Task Manager
+- "show activity log", "what have you done for me" shows log in chat
+
+### Task 4: Activity Log
+- Records all chatbot actions with timestamps
+- View by clicking Activity Log button or typing "show activity log"
+- Displays last 10 actions in the chat window
